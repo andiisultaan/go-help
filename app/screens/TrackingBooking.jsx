@@ -3,16 +3,16 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Image } from "r
 import { MaterialIcons } from "@expo/vector-icons";
 import FeedbackModal from "../components/FeedbackModal";
 
-const TrackBooking = ({ navigation }) => {
+const TrackBooking = ({ navigation, route }) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const totalPrice = route.params?.totalPrice || 0;
+  const discount = 1000; // Assuming a fixed discount for this example
+  const finalPrice = totalPrice - discount;
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Track Booking</Text>
       </View>
 
@@ -34,19 +34,19 @@ const TrackBooking = ({ navigation }) => {
 
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Price</Text>
-            <Text style={styles.paymentValue}>Rp11,000</Text>
+            <Text style={styles.paymentValue}>Rp{totalPrice.toLocaleString()}</Text>
           </View>
 
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Discount</Text>
-            <Text style={[styles.paymentValue, styles.discountText]}>Rp1,000</Text>
+            <Text style={[styles.paymentValue, styles.discountText]}>Rp{discount.toLocaleString()}</Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.paymentRow}>
             <Text style={styles.totalLabel}>Total payment</Text>
-            <Text style={styles.totalValue}>Rp10,000</Text>
+            <Text style={styles.totalValue}>Rp{finalPrice.toLocaleString()}</Text>
           </View>
         </View>
       </View>

@@ -3,12 +3,26 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Moda
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 
-const BookingDetails = ({ navigation }) => {
+const BookingDetails = ({ navigation, route }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("gopay");
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const paymentSlideAnimation = useRef(new Animated.Value(0)).current;
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
+  const [region, setRegion] = useState(null);
+
+  const getDistance = (start, end) => {
+    const toRad = x => (x * Math.PI) / 180;
+    const R = 6371; // Earth's radius in km
+
+    const dLat = toRad(end.latitude - start.latitude);
+    const dLon = toRad(end.longitude - start.longitude);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(start.latitude)) * Math.cos(toRad(end.latitude)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   const paymentMethods = [
     {
@@ -83,20 +97,27 @@ const BookingDetails = ({ navigation }) => {
     }
   }, [isPaymentModalVisible]);
 
+  useEffect(() => {
+    if (route.params?.pickupLocation && route.params?.destination) {
+      setCurrentLocation(route.params.pickupLocation);
+      setDestinationLocation(route.params.destination);
+      setRegion({
+        ...route.params.pickupLocation,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [route.params]);
+
   const pickupLocation = {
     latitude: -0.9115,
     longitude: 100.4558,
   };
 
-  const destinationLocation = {
-    latitude: -0.9125,
-    longitude: 100.4568,
-  };
-
   const handleConfirmBooking = () => {
     setIsModalVisible(false);
-    // Add your booking confirmation logic here
-    navigation.navigate("PaymentSuccess");
+    const totalPrice = calculateTotalPrice();
+    navigation.navigate("PaymentSuccess", { totalPrice });
   };
 
   const handlePaymentSelect = paymentId => {
@@ -123,6 +144,13 @@ const BookingDetails = ({ navigation }) => {
     return paymentMethods.find(method => method.id === selectedPayment);
   };
 
+  const calculateTotalPrice = () => {
+    const basePrice = 10000;
+    const pricePerKm = 2000;
+    const distance = currentLocation && destinationLocation ? getDistance(currentLocation, destinationLocation) : 0;
+    return basePrice + pricePerKm * Math.ceil(distance);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -145,11 +173,10 @@ const BookingDetails = ({ navigation }) => {
                 <View style={[styles.locationDot, styles.pickupDot]} />
               </View>
               <View style={styles.locationTextContainer}>
-                <Text style={styles.primaryText}>Puti Zafania</Text>
-                <Text style={styles.secondaryText}>Jl. Belibis No.24, Air Tawar Bar.</Text>
+                <Text style={styles.primaryText}>Pickup Location</Text>
+                <Text style={styles.secondaryText}>{route.params?.pickupAddress?.main || "Loading..."}</Text>
               </View>
             </View>
-            <MaterialIcons name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
           {/* Connector Line */}
@@ -164,10 +191,10 @@ const BookingDetails = ({ navigation }) => {
                 <View style={[styles.locationDot, styles.destinationDot]} />
               </View>
               <View style={styles.locationTextContainer}>
-                <Text style={styles.secondaryText}>Jalan Tekukur No.22A, Air Tawar.</Text>
+                <Text style={styles.primaryText}>Destination</Text>
+                <Text style={styles.secondaryText}>{route.params?.destinationAddress?.main || "Set destination"}</Text>
               </View>
             </View>
-            <MaterialIcons name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
         </View>
 
@@ -181,28 +208,27 @@ const BookingDetails = ({ navigation }) => {
 
         {/* Map Card */}
         <View style={styles.mapCard}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              ...pickupLocation,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            <Marker coordinate={pickupLocation}>
-              <View style={styles.markerContainer}>
-                <MaterialIcons name="location-on" size={24} color="#2E7D32" />
-              </View>
-            </Marker>
-            <Marker coordinate={destinationLocation}>
-              <View style={styles.markerContainer}>
-                <MaterialIcons name="location-on" size={24} color="#D32F2F" />
-              </View>
-            </Marker>
-            <Polyline coordinates={[pickupLocation, destinationLocation]} strokeColor="#2E7D32" strokeWidth={3} lineDashPattern={[1]} />
-          </MapView>
+          {region && (
+            <MapView style={styles.map} region={region} onRegionChangeComplete={setRegion}>
+              {currentLocation && (
+                <Marker coordinate={currentLocation}>
+                  <View style={styles.markerContainer}>
+                    <MaterialIcons name="location-on" size={24} color="#2E7D32" />
+                  </View>
+                </Marker>
+              )}
+              {destinationLocation && (
+                <Marker coordinate={destinationLocation}>
+                  <View style={styles.markerContainer}>
+                    <MaterialIcons name="location-on" size={24} color="#D32F2F" />
+                  </View>
+                </Marker>
+              )}
+              {currentLocation && destinationLocation && <Polyline coordinates={[currentLocation, destinationLocation]} strokeColor="#2E7D32" strokeWidth={3} lineDashPattern={[1]} />}
+            </MapView>
+          )}
           <View style={styles.distanceBadge}>
-            <Text style={styles.distanceText}>Total Distance: 4.5km</Text>
+            <Text style={styles.distanceText}>Total Distance: {currentLocation && destinationLocation ? `${getDistance(currentLocation, destinationLocation).toFixed(2)}km` : "Calculating..."}</Text>
           </View>
         </View>
       </View>
@@ -227,7 +253,17 @@ const BookingDetails = ({ navigation }) => {
               <View style={styles.serviceRow}>
                 <MaterialIcons name="motorcycle" size={24} color="#2E7D32" />
                 <Text style={styles.serviceText}>Instant - Bike</Text>
-                <Text style={styles.priceText}>Rp11,000</Text>
+                <Text style={styles.priceText}>Rp{formatCurrency(calculateTotalPrice())}</Text>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.priceBreakdown}>
+                <Text style={styles.priceBreakdownText}>Base Price: Rp10,000</Text>
+                <Text style={styles.priceBreakdownText}>
+                  Distance Fee: Rp{formatCurrency(calculateTotalPrice() - 10000)}({currentLocation && destinationLocation ? `${getDistance(currentLocation, destinationLocation).toFixed(2)}km` : "0km"})
+                </Text>
+                <Text style={styles.priceBreakdownTotal}>Total: Rp{formatCurrency(calculateTotalPrice())}</Text>
               </View>
 
               <View style={styles.divider} />
@@ -473,7 +509,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end", // Changed from "center" to "flex-end"
+    justifyContent: "flex-end",
     alignItems: "center",
   },
   modalContent: {
@@ -495,7 +531,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#000",
-    padding: 16,
   },
   modalBody: {
     padding: 16,
@@ -556,182 +591,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     fontWeight: "bold",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container2: {
-    flex: 1,
-    margin: 16,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  backButton: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
-    marginBottom: 16,
-  },
-  requiredStar: {
-    color: "red",
-    marginLeft: 4,
-  },
-  locationItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  locationContent: {
-    flexDirection: "row",
-    flex: 1,
-  },
-  locationIconContainer: {
-    width: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  locationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  pickupDot: {
-    backgroundColor: "#2E7D32",
-  },
-  destinationDot: {
-    backgroundColor: "#D32F2F",
-  },
-  locationTextContainer: {
-    flex: 1,
-  },
-  primaryText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#000",
-    marginBottom: 4,
-  },
-  secondaryText: {
-    fontSize: 14,
-    color: "#666",
-  },
-  connectorLineContainer: {
-    paddingLeft: 24,
-    height: 20,
-  },
-  connectorLine: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#ccc",
-  },
-  detailsInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    paddingVertical: 8,
-    fontSize: 14,
-    color: "#000",
-  },
-  mapCard: {
-    height: 200,
-    backgroundColor: "white",
-    borderRadius: 12,
-    overflow: "hidden",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  markerContainer: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 4,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  distanceBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "white",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  distanceText: {
-    fontSize: 12,
-    color: "#666",
-  },
-  nextButton: {
-    backgroundColor: "#2E7D32",
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  nextButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  priceText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: "auto",
-  },
-  confirmText: {
-    fontSize: 14,
-    marginBottom: 16,
   },
   paymentSelector: {
     flexDirection: "row",
@@ -819,6 +678,20 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingBottom: 20,
     maxHeight: "80%",
+  },
+  priceBreakdown: {
+    marginTop: 16,
+  },
+  priceBreakdownText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 4,
+  },
+  priceBreakdownTotal: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginTop: 8,
   },
 });
 

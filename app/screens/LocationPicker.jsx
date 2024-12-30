@@ -1,28 +1,113 @@
-import React from "react";
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert } from "react-native";
 import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
+import { debounce } from "lodash";
 
-const LocationPicker = ({ navigation }) => {
-  const initialRegion = {
-    latitude: -0.9115,
-    longitude: 100.4558,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
+const LocationScreen = ({ navigation, route }) => {
+  const { locationType, initialLocation, returnScreen, currentPickupLocation } = route.params;
+  const [region, setRegion] = useState(
+    initialLocation || {
+      latitude: 0,
+      longitude: 0,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }
+  );
+
+  const [address, setAddress] = useState({
+    main: "",
+    secondary: "",
+  });
+
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+
+  useEffect(() => {
+    if (locationType === "destination" && currentPickupLocation) {
+      setRegion(currentPickupLocation);
+      fetchAddress(currentPickupLocation.latitude, currentPickupLocation.longitude);
+    } else if (initialLocation) {
+      setRegion(initialLocation);
+      fetchAddress(initialLocation.latitude, initialLocation.longitude);
+    } else {
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permission Denied", "Please allow location access to use this feature.");
+          return;
+        }
+
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+
+          const { latitude, longitude } = location.coords;
+
+          setRegion({
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
+
+          await fetchAddress(latitude, longitude);
+        } catch (error) {
+          Alert.alert("Error", "Unable to fetch your location");
+          console.error(error);
+        }
+      })();
+    }
+  }, [initialLocation, currentPickupLocation, locationType]);
+
+  const fetchAddress = async (latitude, longitude) => {
+    setIsAddressLoading(true);
+    try {
+      const [addressResponse] = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (addressResponse) {
+        setAddress({
+          main: addressResponse.street || "Unknown location",
+          secondary: `${addressResponse.district || ""}, ${addressResponse.city || ""}, ${addressResponse.region || ""}, ${addressResponse.country || ""}`.trim().replace(/^,\s*/, ""),
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      setAddress({
+        main: "Unable to fetch address",
+        secondary: "Please try again later",
+      });
+    } finally {
+      setIsAddressLoading(false);
+    }
+  };
+
+  const debouncedFetchAddress = useCallback(debounce(fetchAddress, 1000, { leading: true, trailing: true }), []);
+
+  const onRegionChangeComplete = newRegion => {
+    setRegion(newRegion);
+    debouncedFetchAddress(newRegion.latitude, newRegion.longitude);
+  };
+
+  const handleSelectLocation = () => {
+    navigation.navigate(route.params.returnScreen, {
+      selectedLocation: region,
+      selectedAddress: address,
+      locationType: locationType,
+    });
   };
 
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} initialRegion={initialRegion}>
-        <Marker
-          coordinate={{
-            latitude: -0.9115,
-            longitude: 100.4558,
-          }}
-        />
+      <MapView style={styles.map} region={region} onRegionChangeComplete={onRegionChangeComplete}>
+        <Marker coordinate={region} />
       </MapView>
 
       <View style={styles.bottomSheet}>
-        <Text style={styles.title}>Set your Location</Text>
+        <Text style={styles.title}>Set your {locationType === "pickup" ? "Pickup Location" : "Destination"}</Text>
 
         <View style={styles.addressContainer}>
           <View style={styles.pinIcon}>
@@ -30,13 +115,19 @@ const LocationPicker = ({ navigation }) => {
           </View>
 
           <View style={styles.addressTextContainer}>
-            <Text style={styles.addressMain}>Jl. Belibis No.24</Text>
-            <Text style={styles.addressSecondary}>Jl. Belibis No.24, Air Tawar Bar., Kec. Padang Utara, Kota Padang, Sumatera Barat, Indonesia</Text>
+            {isAddressLoading ? (
+              <Text style={styles.addressMain}>Loading address...</Text>
+            ) : (
+              <>
+                <Text style={styles.addressMain}>{address.main}</Text>
+                <Text style={styles.addressSecondary}>{address.secondary}</Text>
+              </>
+            )}
           </View>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("SetLocationDetails")}>
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSelectLocation} disabled={isAddressLoading}>
+          <Text style={styles.buttonText}>{isAddressLoading ? "Loading..." : "Select"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -114,4 +205,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LocationPicker;
+export default LocationScreen;

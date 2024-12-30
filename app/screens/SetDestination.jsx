@@ -1,10 +1,56 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 const SetDestination = ({ navigation }) => {
   const [destination, setDestination] = useState("");
   const [locationType, setLocationType] = useState("saved"); // 'saved' or 'manual'
+  const [currentLocation, setCurrentLocation] = useState({
+    address: "Loading...",
+    subAddress: "Please wait",
+  });
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Please allow location access to use this feature.");
+        return;
+      }
+
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+        await fetchAddress(latitude, longitude);
+      } catch (error) {
+        console.error("Error getting location:", error);
+        Alert.alert("Error", "Unable to fetch your location");
+      }
+    })();
+  }, []);
+
+  const fetchAddress = async (latitude, longitude) => {
+    try {
+      const [addressResponse] = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (addressResponse) {
+        setCurrentLocation({
+          address: addressResponse.street || "Unknown location",
+          subAddress: `${addressResponse.district || ""}, ${addressResponse.city || ""}, ${addressResponse.region || ""}`.trim().replace(/^,\s*/, ""),
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      setCurrentLocation({
+        address: "Unable to fetch address",
+        subAddress: "Please check your internet connection",
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -26,9 +72,9 @@ const SetDestination = ({ navigation }) => {
           <Text style={styles.locationDot}>•</Text>
         </View>
         <View style={styles.locationText}>
-          <Text style={styles.locationTitle}>Jl. Belibis No.24</Text>
-          <Text style={styles.locationSubtitle}>Air Tawar Bar.</Text>
-          <TextInput style={styles.destinationInput} placeholder="Where our destination?" value={destination} onChangeText={setDestination} />
+          <Text style={styles.locationTitle}>{currentLocation.address}</Text>
+          <Text style={styles.locationSubtitle}>{currentLocation.subAddress}</Text>
+          <TextInput style={styles.destinationInput} placeholder="Where's our destination?" value={destination} onChangeText={setDestination} />
         </View>
       </View>
 
@@ -44,7 +90,16 @@ const SetDestination = ({ navigation }) => {
       </View>
 
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton} onPress={() => navigation.navigate("BookingDetails")}>
+      <TouchableOpacity
+        style={styles.nextButton}
+        onPress={() =>
+          navigation.navigate("BookingDetails", {
+            currentLocation: currentLocation,
+            destination: destination,
+            locationType: locationType,
+          })
+        }
+      >
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -129,32 +184,6 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: "#2E7D32",
-  },
-  tabContainer: {
-    flexDirection: "row",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    position: "absolute",
-    bottom: 80,
-    left: 0,
-    right: 0,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#2E7D32",
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#666",
-  },
-  activeTabText: {
-    color: "#2E7D32",
-    fontWeight: "500",
   },
   nextButton: {
     backgroundColor: "#2E7D32",

@@ -9,7 +9,7 @@ const helpItems = [
     title: "Keamanan Pribadi",
     subtitle: "Atur fitur keamanan untuk diri sendiri",
     icon: "shield-account",
-    label: "LocationPicker",
+    label: "SetLocationDetails",
   },
   {
     id: "2",

@@ -1,12 +1,16 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Animated, Image, Dimensions } from "react-native";
+import { View, StyleSheet, Animated, Dimensions, StatusBar } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
-const PaymentSuccess = ({ navigation }) => {
+const PaymentSuccess = ({ navigation, route }) => {
   const scaleValue = new Animated.Value(0);
+  const totalPrice = route.params?.totalPrice || 0;
 
   useEffect(() => {
+    // Hide the status bar
+    StatusBar.setHidden(true);
+
     // Animate the checkmark when component mounts
     Animated.spring(scaleValue, {
       toValue: 1,
@@ -15,13 +19,17 @@ const PaymentSuccess = ({ navigation }) => {
       tension: 40,
     }).start();
 
-    // Navigate to tracking page after 2 seconds
+    // Navigate to tracking page after 2.5 seconds
     const timer = setTimeout(() => {
-      navigation.replace("TrackingBooking");
+      navigation.replace("TrackingBooking", { totalPrice });
     }, 2500);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      // Show the status bar when component unmounts
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, totalPrice, scaleValue]);
 
   return (
     <View style={styles.container}>
@@ -42,7 +50,7 @@ const PaymentSuccess = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#000", // Set a background color to ensure full coverage
   },
   backgroundImage: {
     position: "absolute",
@@ -50,16 +58,6 @@ const styles = StyleSheet.create({
     height: height,
     top: 0,
     left: 0,
-  },
-  text: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "600",
-    position: "absolute",
-    bottom: "40%",
-    textAlign: "center",
-    width: "100%",
-    zIndex: 1,
   },
 });
 

@@ -35,7 +35,14 @@ const HomeStackScreen = () => {
       <HomeStack.Screen name="BookingDetails" component={BookingDetails} />
       <HomeStack.Screen name="TrackingBooking" component={TrackBooking} />
       <HomeStack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <HomeStack.Screen name="PaymentSuccess" component={PaymentSuccess} />
+      <HomeStack.Screen
+        name="PaymentSuccess"
+        component={PaymentSuccess}
+        options={{
+          presentation: "fullScreenModal",
+          animationEnabled: false,
+        }}
+      />
     </HomeStack.Navigator>
   );
 };
