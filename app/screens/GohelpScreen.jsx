@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, StyleSheet, Animated, Dimensions } from "react-native";
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, StyleSheet, Animated, Dimensions, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import ImageSlider from "../components/ImageSlider";
 
@@ -27,7 +27,7 @@ const helpItems = [
   },
 ];
 
-const bannerImages = [require("../assets/promo1.jpg"), require("../assets/help.png"), require("../assets/promo3.jpg")];
+const bannerImages = [require("../assets/poster1.jpg"), require("../assets/poster2.jpg"), require("../assets/poster6.jpg")];
 
 const GoHelpScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -102,6 +102,8 @@ const GoHelpScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* modal help */}
       <Modal animationType="none" transparent={true} visible={modalVisible} onRequestClose={closeModal}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeModal}>
           <Animated.View
@@ -119,7 +121,9 @@ const GoHelpScreen = ({ navigation }) => {
               },
             ]}
           >
-            <ImageSlider images={[require("../assets/help.png")]} interval={5000} />
+            <View style={styles.modalImageContainer}>
+              <Image source={require("../assets/help2.png")} style={styles.modalImage} resizeMode="cover" />
+            </View>
             <Text style={styles.modalTitle}>Pilih Jenis Bantuan yang kamu butuhkan!</Text>
             <Text style={styles.modalDescription}>Kami akan membantu anda selalu dengan permasalahan yang anda alami. Kami siap sigap membantu anda !</Text>
             <TouchableOpacity style={styles.button} onPress={closeModal}>
@@ -167,8 +171,8 @@ const styles = StyleSheet.create({
   },
   bannerContainer: {
     width: "100%",
-    height: 200,
-    backgroundColor: "#F6F6F6",
+    paddingVertical: 16,
+    backgroundColor: "#FFF",
   },
   helpSection: {
     padding: 16,
@@ -232,9 +236,18 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    width: "100%",
     alignItems: "center",
-    maxHeight: "80%",
+  },
+  modalImageContainer: {
+    width: 300,
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  modalImage: {
+    width: "95%",
+    height: "105%",
   },
   modalTitle: {
     fontSize: 20,
@@ -249,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#00AA13",
+    backgroundColor: "#2E7D32",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

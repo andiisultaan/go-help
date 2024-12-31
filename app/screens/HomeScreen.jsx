@@ -20,19 +20,19 @@ const promos = [
     id: "1",
     title: "Makin Hemat 😉",
     description: "Aktifkan & Gunakan GoPay di Tokopedia",
-    image: require("../assets/promo1.jpg"),
+    image: require("../assets/poster5.png"),
   },
   {
     id: "2",
     title: "Makin Seru 🎮",
     description: "Mainkan game dan dapatkan hadiah",
-    image: require("../assets/promo2.jpg"),
+    image: require("../assets/poster3.png"),
   },
   {
     id: "3",
     title: "Spesial Promo 😁",
     description: "Dapatkan cashback hingga 50%",
-    image: require("../assets/promo3.jpg"),
+    image: require("../assets/poster4.png"),
   },
 ];
 

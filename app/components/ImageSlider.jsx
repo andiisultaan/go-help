@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Image, Animated, PanResponder, Dimensions, StyleSheet } from "react-native";
 
 const { width } = Dimensions.get("window");
+const CARD_WIDTH = 300; // Fixed width for all cards
+const CARD_HEIGHT = 200; // Fixed height for all cards
 
-const ImageSlider = ({ images, interval = 5000 }) => {
+const ImageSlider = ({ images, interval = 3000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const slideRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,7 +74,16 @@ const ImageSlider = ({ images, interval = 5000 }) => {
     return (
       <View style={styles.paginationContainer}>
         {images.map((_, index) => (
-          <View key={index} style={[styles.paginationDot, { opacity: currentIndex === index ? 1 : 0.5 }]} />
+          <View
+            key={index}
+            style={[
+              styles.paginationDot,
+              {
+                backgroundColor: currentIndex === index ? "#006E0A" : "#CCCCCC",
+                width: currentIndex === index ? 20 : 8,
+              },
+            ]}
+          />
         ))}
       </View>
     );
@@ -91,9 +101,29 @@ const ImageSlider = ({ images, interval = 5000 }) => {
         ]}
         {...panResponder.panHandlers}
       >
-        {images.map((image, index) => (
-          <Image key={index} source={image} style={styles.image} resizeMode="cover" />
-        ))}
+        {images.map((image, index) => {
+          const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+
+          const scale = scrollX.interpolate({
+            inputRange,
+            outputRange: [0.9, 1, 0.9],
+            extrapolate: "clamp",
+          });
+
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                styles.cardContainer,
+                {
+                  transform: [{ scale }],
+                },
+              ]}
+            >
+              <Image source={image} style={styles.image} resizeMode="cover" />
+            </Animated.View>
+          );
+        })}
       </Animated.View>
       {renderPagination()}
     </View>
@@ -103,17 +133,25 @@ const ImageSlider = ({ images, interval = 5000 }) => {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    height: 200,
+    height: CARD_HEIGHT + 40, // Extra space for pagination
     position: "relative",
     overflow: "hidden",
   },
   slidesContainer: {
     flexDirection: "row",
-    height: "100%",
+    height: CARD_HEIGHT,
+  },
+  cardContainer: {
+    width: width,
+    height: CARD_HEIGHT,
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
-    width: width,
-    height: 200,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   paginationContainer: {
     flexDirection: "row",
@@ -122,10 +160,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   paginationDot: {
-    width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "green",
     marginHorizontal: 4,
   },
 });

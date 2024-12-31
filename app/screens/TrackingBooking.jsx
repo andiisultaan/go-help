@@ -20,7 +20,7 @@ const TrackBooking = ({ navigation, route }) => {
       <View style={styles.content}>
         {/* Illustration */}
         <View style={styles.illustrationContainer}>
-          <Image source={require("../assets/help.png")} style={styles.illustration} resizeMode="contain" />
+          <Image source={require("../assets/help2.png")} style={styles.illustration} resizeMode="contain" />
 
           {/* Status Bubble */}
           <View style={styles.statusBubble}>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   illustration: {
     width: "100%",
-    height: 200,
+    height: 250,
     marginBottom: 16,
   },
   statusBubble: {
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E7D32",
     margin: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: "center",
   },
   completeButtonText: {

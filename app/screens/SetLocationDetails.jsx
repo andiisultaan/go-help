@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   setLocationButton: {
     backgroundColor: "#2E7D32",
     padding: 8,
-    borderRadius: 6,
+    borderRadius: 20,
     alignItems: "center",
     marginTop: 8,
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E7D32",
     margin: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: "center",
   },
   nextButtonText: {

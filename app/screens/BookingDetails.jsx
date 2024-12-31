@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E7D32",
     margin: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: "center",
   },
   nextButtonText: {
