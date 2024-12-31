@@ -16,12 +16,14 @@ const helpItems = [
     title: "Bantuan Kendaraan",
     subtitle: "Bantuan untuk kendaraan",
     icon: "car",
+    label: "BantuanKendaraan",
   },
   {
     id: "3",
     title: "Bantuan Lainnya",
     subtitle: "Pilihan bantuan yang tersedia",
     icon: "pencil",
+    label: "BantuanLainnya",
   },
 ];
 

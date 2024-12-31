@@ -19,6 +19,10 @@ import BookingDetails from "../screens/BookingDetails";
 import TrackBooking from "../screens/TrackingBooking";
 import ProfileScreen from "../screens/ProfileScreen";
 import PaymentSuccess from "../components/PaymentSuccess";
+import BantuanKendaraan from "../screens/BantuanKendaraan";
+import BantuanKendaraanDetails from "../screens/BookingKendaraanDetails";
+import BantuanLainnya from "../screens/BantuanLainnya";
+import BantuanLainnyaDetails from "../screens/BantuanLainnyaDetails";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -35,6 +39,10 @@ const HomeStackScreen = () => {
       <HomeStack.Screen name="BookingDetails" component={BookingDetails} />
       <HomeStack.Screen name="TrackingBooking" component={TrackBooking} />
       <HomeStack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <HomeStack.Screen name="BantuanKendaraan" component={BantuanKendaraan} />
+      <HomeStack.Screen name="BantuanKendaraanDetails" component={BantuanKendaraanDetails} />
+      <HomeStack.Screen name="BantuanLainnya" component={BantuanLainnya} />
+      <HomeStack.Screen name="BantuanLainnyaDetails" component={BantuanLainnyaDetails} />
       <HomeStack.Screen
         name="PaymentSuccess"
         component={PaymentSuccess}
