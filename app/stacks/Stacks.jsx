@@ -2,11 +2,10 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-// import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { View, Text, StyleSheet } from "react-native";
 
-// Import your actual HomeScreen component
+// Import screens
 import HomeScreen from "../screens/HomeScreen";
 import GoHelpScreen from "../screens/GohelpScreen";
 import OrderScreen from "../screens/OrderScreen";
@@ -23,6 +22,9 @@ import BantuanKendaraan from "../screens/BantuanKendaraan";
 import BantuanKendaraanDetails from "../screens/BookingKendaraanDetails";
 import BantuanLainnya from "../screens/BantuanLainnya";
 import BantuanLainnyaDetails from "../screens/BantuanLainnyaDetails";
+import OnboardingScreen from "../screens/OnboardingScreen";
+import LoginScreen from "../screens/LoginScreen";
+import LoadingScreen from "../screens/LoadingScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -104,7 +106,10 @@ const MainTabs = () => {
 const StackHolder = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="OnboardingScreen">
+        <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
         <Stack.Screen name="Main" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>
